@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+
+</head>
+<body>
+    <div id="chat">Основное окно</div>
+    <div><input type="text" /></div>
+    <script type="text/javascript" src="http://yandex.st/jquery/1.6.0/jquery.min.js"></script>
+    <script type="text/javascript">
+	    setTimeout(function () { // Ставлю именно таймаут, а не $.ready иначе у вебкитов будет бесконечная загрузка
+	        var $text = $('input');
+	        var $chat = $('#chat');
+
+	        var host = 'ws://127.0.0.1:8001/';
+
+	        var socket = new WebSocket("ws://javascript.ru/ws");
+
+            socket.onopen = function() {
+                alert("Соединение установлено.");
+            };
+
+            socket.onclose = function(event) {
+                if (event.wasClean) {
+                    alert('Соединение закрыто чисто');
+                } else {
+                    alert('Обрыв соединения'); // например, "убит" процесс сервера
+                }
+                alert('Код: ' + event.code + ' причина: ' + event.reason);
+            };
+
+            socket.onmessage = function(event) {
+                alert("Получены данные " + event.data);
+            };
+
+            socket.onerror = function(error) {
+                alert("Ошибка " + error.message);
+            };
+
+	        function escape(str, length) {
+	            return str.substr(0, length || -1).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	        }
+
+            $text.keyup(function (event) {
+	            var message = $text.val().substr(0, 1000);
+            	if (event.which === 13 && message) {
+	               socket.send(message);
+            	   $text.val('');
+	            }
+	        });
+    	}, 50);
+	</script>
+</body>
+</html>

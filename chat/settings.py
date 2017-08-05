@@ -62,7 +62,7 @@ ROOT_URLCONF = 'chat.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'room/templates/')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -130,5 +130,5 @@ STATIC_URL = '/static/'
 AUTH_USER_MODEL = 'my_auth.User'
 AUTH_USER_MODEL_SERIALIZER = 'auth:user'
 
-LOGIN_URL = '/auth/login/'
+LOGIN_URL = 'auth:login'
 LOGOUT_URL = 'auth:logout'

@@ -22,5 +22,6 @@ swagger_view = get_swagger_view(title='SWAGGER DOCS')
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^auth/', include('my_auth.urls', namespace='auth', app_name='auth')),
+    url(r'^room/', include('room.urls', namespace='room', app_name='room')),
     url(r'^docs/', swagger_view),
 ]
