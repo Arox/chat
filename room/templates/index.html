@@ -14,9 +14,9 @@
 	        var $text = $('input');
 	        var $chat = $('#chat');
 
-	        var host = 'ws://127.0.0.1:8001/';
+	        var host = 'ws://127.0.0.1:8001/room/message/3';
 
-	        var socket = new WebSocket("ws://javascript.ru/ws");
+	        var socket = new WebSocket(host);
 
             socket.onopen = function() {
                 alert("Соединение установлено.");
@@ -46,7 +46,7 @@
             $text.keyup(function (event) {
 	            var message = $text.val().substr(0, 1000);
             	if (event.which === 13 && message) {
-	               socket.send(message);
+	               socket.send(JSON.stringify({"message": message}));
             	   $text.val('');
 	            }
 	        });
