@@ -4,6 +4,12 @@ from rest_framework import status
 from channels.handler import AsgiHandler
 from channels import Group
 import json
+from django.contrib.sessions.models import Session
+from my_auth.models import User
+from django.core.handlers.wsgi import WSGIRequest
+from channels.sessions import channel_session
+from channels.auth import channel_session_user, channel_session_user_from_http
+
 
 def pk_from_url(url: str):
     if url[-1] == '/':
@@ -13,37 +19,31 @@ def pk_from_url(url: str):
     return pk
 
 
-def connect_room(message):
-    url: str = message.content['path']
+def get_user_by_session(session_id):
+    session = Session.objects.get(session_key=session_id)
+    session_data = session.get_decoded()
+    uid = session_data.get('_auth_user_id')
+    return User.objects.get(id=uid)
+
+
+@channel_session_user_from_http
+def connect_room(request):
+    print(request.user)
+    url: str = request.content['path']
     pk = pk_from_url(url)
-    message.reply_channel.send({"accept": True})
-    Group('room{0}'.format(pk)).add(message.reply_channel)
+    request.reply_channel.send({"accept": True})
+    Group('room{0}'.format(pk)).add(request.reply_channel)
 
 
-def disconnect_room(message):
-    url: str = message.content['path']
+def disconnect_room(request):
+    url: str = request.content['path']
     pk = pk_from_url(url)
-    Group('room{0}'.format(pk)).discard(message.reply_channel)
+    Group('room{0}'.format(pk)).discard(request.reply_channel)
 
 
-def send_room(message):
-    print(message.content)
-    body = json.loads(message.content['text'])
+def send_room(request):
+    body = json.loads(request.content['text'])
     print(body)
-    url: str = message.content['path']
+    url: str = request.content['path']
     pk = pk_from_url(url)
-    # options = body['options']
-    # type_operation = body['type']
     Group('room{0}'.format(pk)).send({'text' : json.dumps(body)})
-    # try:
-    #     draft = SimpleDocumentTemplateDraftHtml.objects.get(pk=pk)
-    #     if type_operation == 'add':
-    #         draft.add_options(json.loads(options))
-    #     elif type_operation == 'remove':
-    #         draft.remove_options(json.loads(options))
-    #     else:
-    #         terminal.print_error('ERROR TYPE OPERATION: {}'.format(type_operation))
-    #         pass
-    # except SimpleDocumentTemplateDraftHtml.DoesNotExist:
-    #     return HttpResponse(status=status.HTTP_404_NOT_FOUND)
-    # Group('draft{0}'.format(pk)).send(body)
