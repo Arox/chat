@@ -9,6 +9,7 @@ from my_auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
 from channels.sessions import channel_session
 from channels.auth import channel_session_user, channel_session_user_from_http
+from .models import Room
 
 
 def pk_from_url(url: str):
@@ -28,11 +29,16 @@ def get_user_by_session(session_id):
 
 @channel_session_user_from_http
 def connect_room(request):
-    print(request.user)
     url: str = request.content['path']
     pk = pk_from_url(url)
-    request.reply_channel.send({"accept": True})
-    Group('room{0}'.format(pk)).add(request.reply_channel)
+    try:
+        room = Room.objects.get(pk=pk, users__in=[request.user])
+        request.reply_channel.send({"accept": True})
+        Group('room{0}'.format(pk)).add(request.reply_channel)
+        print('OK')
+    except Room.DoesNotExist:
+        request.reply_channel.send({"accept": False})
+        print('BAD')
 
 
 def disconnect_room(request):
