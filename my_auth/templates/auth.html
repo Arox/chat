@@ -1,0 +1,27 @@
+{% load static from staticfiles %}
+{% load rest_framework %}
+{% load i18n %}
+
+{% block title %}
+Авторизация
+{% endblock %}
+
+{% block style %}
+<link rel="stylesheet" href="{% static 'css/my_auth/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class='parent'>
+    <div class='block' id = 'login_block'>
+        <div>
+
+            <form action="{% url 'auth:form' %}" method="post" novalidate>
+                {% csrf_token %}
+                {{ form }}
+                <div class="button-conteiner"><button type="submit" class="btn-enter">Войти</button></div>
+            </form>
+            <div class="error_message">{{ error_message }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

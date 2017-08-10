@@ -47,6 +47,13 @@ class BaseAuth(object):
         return data is not None and len(data) > 0
 
     @staticmethod
+    def is_login(request):
+        user = BaseAuth.get_user(request)
+        if user is not None:
+            return user.is_authenticated()
+        return False
+
+    @staticmethod
     def correct_password(data):
         return data is not None and len(data) > 0
 
