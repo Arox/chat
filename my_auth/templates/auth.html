@@ -20,6 +20,7 @@
                 {{ form }}
                 <div class="button-conteiner"><button type="submit" class="btn-enter">Войти</button></div>
             </form>
+            <a href="{% url 'auth:registration' %}">Зарегистрироваться</a>
             <div class="error_message">{{ error_message }}</div>
         </div>
     </div>

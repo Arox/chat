@@ -1,0 +1,27 @@
+{% load static from staticfiles %}
+{% load rest_framework %}
+{% load i18n %}
+
+{% block title %}
+Регистрация
+{% endblock %}
+
+{% block style %}
+<link rel="stylesheet" href="{% static 'css/my_auth/registration.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class='parent'>
+    <div class='block' id = 'registration_block'>
+        <div>
+
+            <form action="{% url 'auth:registration' %}" method="post" novalidate>
+                {% csrf_token %}
+                {{ form }}
+                <div class="button-conteiner"><button type="submit" class="btn-enter">Зарегестрировать</button></div>
+            </form>
+            <div class="error_message">{{ error_message }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

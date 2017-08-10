@@ -70,13 +70,31 @@ class BaseAuth(object):
             if BaseAuth.correct_password(password):
                 user = BaseAuth.get_user_by_name(login, password)
                 if user.is_active:
-                    auth.login(request, user)
+                    print(auth.login(request, user))
                 else:
                     raise BlockedUser
             else:
                 raise NonCorrectPassword
         else:
             raise NonCorrectLogin
+
+    @staticmethod
+    def create_user(login, password, first_name, last_name):
+        if BaseAuth.correct_login(login):
+            if BaseAuth.correct_password(password):
+                User.objects.create_user(username=login, password=password, first_name=first_name, last_name=last_name)
+            else:
+                raise NonCorrectPassword()
+        else:
+            raise NonCorrectLogin()
+
+    @staticmethod
+    def has_login(login):
+        try:
+            User.objects.get(username=login)
+            return True
+        except User.DoesNotExist:
+            return False
 
 
 # class MyBackend(object):

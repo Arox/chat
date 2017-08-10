@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import LoginSerializer
 from .base import BaseAuth, MyAuthException
-from .forms import AuthForm
+from .forms import AuthForm, RegistrationForm
 # Create your views here.
 
 
@@ -21,6 +21,22 @@ class AuthFormView(FormView):
     def form_valid(self, form: AuthForm):
         try:
             form.login_user(self.request)
+        except MyAuthException as error:
+            return self.form_invalid(form)
+        return HttpResponseRedirect(self.get_success_url())
+
+
+class RegistrationFormView(FormView):
+    template_name = 'registration.html'
+    form_class = RegistrationForm
+
+    def get_success_url(self):
+        next_url = self.request.GET['next'] if 'next' in self.request.GET else '/'
+        return next_url
+
+    def form_valid(self, form: RegistrationForm):
+        try:
+            form.registration_user(self.request)
         except MyAuthException as error:
             return self.form_invalid(form)
         return HttpResponseRedirect(self.get_success_url())
