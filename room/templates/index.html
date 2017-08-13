@@ -7,7 +7,7 @@
 </head>
 <body>
 <style type="text/css">
-	html, body {
+	/*html, body {
 	    margin:0;
 	    padding:0;
 	    width:100%;
@@ -32,14 +32,129 @@
 	#chat {
 	    margin-top: 30px;
 	    padding-left: 10px;
-	}
+	}*/
 
 	</style>
-    <div id="chat">Основное окно</div>
-    <div><input type="text" /></div>
+
+    <script type="text/javascript">
+        var socket = null;
+        var $text = null;
+        var $chat = null;
+
+        function addRoom(){
+    	    var chat_name = prompt('chat:', '').substr(0, 20);
+    	    $.post('add/', { name: chat_name }, function(data){
+    	        alert(data);
+    	    });
+    	}
+
+    	function renderMessage(data) {
+            $chat.prepend('<div class="human">' +
+                          '<span>' + escape(data, 1000) + '</span>' +
+                          '</div>');
+        }
+
+        function sendToServer(data)
+        {
+            socket.send(data);
+        }
+
+        function clearContainer(idName){
+            var myNode = document.getElementById(idName);
+            while (myNode.firstChild) {
+               myNode.removeChild(myNode.firstChild);
+            }
+        }
+
+    	function viewChatUsers(chatPk){
+    	    clearContainer("chat_users");
+    	    clearContainer("chat");
+
+    	    $.get('users/' + chatPk + '/', function(data){
+                var $chat_users = $('#chat_users');
+    	        data.forEach(function(item, i, arr){
+    	            $chat_users.prepend('<li>' + escape(item, 1000) + '</li>');
+    	        });
+    	    });
+
+    	    var host = 'ws://{{ host }}/room/message/'+chatPk+'/';
+
+            if (socket != null){
+                socket.close();
+            }
+
+	        socket = new WebSocket(host);
+
+            socket.onopen = function() {
+                //alert("Соединение установлено.");
+            };
+
+            socket.onclose = function(event) {
+                if (event.wasClean) {
+                    //alert('Соединение закрыто чисто');
+                } else {
+                    alert('Обрыв соединения'); // например, "убит" процесс сервера
+                }
+                //alert('Код: ' + event.code + ' причина: ' + event.reason);
+            };
+
+
+            socket.onmessage = function(event) {
+                // alert("Получены данные " + event.data);
+                renderMessage(JSON.parse(event.data)["message"]);
+            };
+
+            socket.onerror = function(error) {
+                alert("Ошибка " + error.message);
+            };
+
+	        function escape(str, length) {
+	            return str.substr(0, length || -1).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	        }
+
+
+    	}
+    </script>
+
+    <table>
+        <tr>
+            <td>
+                <div>
+                    <ul>
+                    {% for room in rooms %}
+                        <li onclick="viewChatUsers({{ room.pk }})">{{ room.name }}</li>
+                    {% endfor %}
+                    </ul>
+                    <input type="button" value="add chat" onclick="addRoom()">
+                </div>
+            </td>
+            <td>
+                <ul id="chat_users">
+
+                </ul>
+            </td>
+            <td>
+                <div id="chat">Основное окно</div>
+                <div><input type="text" id="input_message" /></div>
+            </td>
+        </tr>
+    </table>
+
     <script type="text/javascript" src="http://yandex.st/jquery/1.6.0/jquery.min.js"></script>
     <script type="text/javascript">
-	    setTimeout(function () { // Ставлю именно таймаут, а не $.ready иначе у вебкитов будет бесконечная загрузка
+        $( document ).ready(function() {
+          $text = $('#input_message');
+          $chat = $('#chat');
+
+            $text.keyup(function (event) {
+                var message = $text.val().substr(0, 1000);
+                if (event.which === 13 && message) {
+                    sendToServer(JSON.stringify({"message": message}));
+                   $text.val('');
+                }
+            });
+        });
+	    /*setTimeout(function () { // Ставлю именно таймаут, а не $.ready иначе у вебкитов будет бесконечная загрузка
 	        var $text = $('input');
 	        var $chat = $('#chat');
 
@@ -64,7 +179,7 @@
 	            $chat.prepend('<div class="human">' +
 	                          '<span>' + escape(data, 1000) + '</span>' +
 	                          '</div>');
-	}
+	        }
 
             socket.onmessage = function(event) {
                 // alert("Получены данные " + event.data);
@@ -86,7 +201,12 @@
             	   $text.val('');
 	            }
 	        });
-    	}, 50);
+    	}, 50);*/
+    	$( document ).ready( function()
+    	 {
+
+    	 });
+
 	</script>
 </body>
 </html>

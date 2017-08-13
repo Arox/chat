@@ -35,10 +35,8 @@ def connect_room(request):
         room = Room.objects.get(pk=pk, users__in=[request.user])
         request.reply_channel.send({"accept": True})
         Group('room{0}'.format(pk)).add(request.reply_channel)
-        print('OK')
     except Room.DoesNotExist:
         request.reply_channel.send({"accept": False})
-        print('BAD')
 
 
 def disconnect_room(request):
