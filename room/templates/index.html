@@ -43,8 +43,14 @@
 
         function addRoom(){
     	    var chat_name = prompt('chat:', '').substr(0, 20);
-    	    $.post('add/', { name: chat_name }, function(data){
-    	        alert(data);
+    	    $.post('add/', { name: chat_name }, function(data, status){
+    	        if (status == 'success'){
+    	            var $chats = $('#chats');
+    	            $chats.append('<li onclick="viewChatUsers('+ data.pk +')">'+ data.name + '</li>');
+    	        }
+    	        else{
+    	            alert('Ошибка, возможно такой чат уже существует');
+    	        }
     	    });
     	}
 
@@ -66,14 +72,46 @@
             }
         }
 
+        function addUser(chatPk, userPk)
+        {
+            $.post('users/chat/'+ chatPk + '/add/'+userPk+'/', function(data, status){
+                if (status == 'success'){
+                    viewChatUsers(chatPk);
+    	        }
+    	        else{
+    	            alert('Ошибка');
+    	        }
+    	    });
+        }
+
+        function removeUser(chatPk, userPk)
+        {
+            $.post('users/chat/'+ chatPk + '/remove/'+userPk+'/', function(data, status){
+    	        if (status == 'success'){
+                    viewChatUsers(chatPk);
+    	        }
+    	        else{
+    	            alert('Ошибка: '+data);
+    	        }
+    	    });
+        }
+
     	function viewChatUsers(chatPk){
     	    clearContainer("chat_users");
+    	    clearContainer("all_users");
     	    clearContainer("chat");
 
     	    $.get('users/' + chatPk + '/', function(data){
                 var $chat_users = $('#chat_users');
     	        data.forEach(function(item, i, arr){
-    	            $chat_users.prepend('<li>' + escape(item, 1000) + '</li>');
+    	            $chat_users.prepend('<li><table><tr><td>' + escape(item.name, 1000) + '</td><td onclick="removeUser('+chatPk+', '+item.pk+')"> - </td></tr></table></li>');
+    	        });
+    	    });
+
+    	    $.get('users/all/' + chatPk + '/', function(data){
+                var $all_users = $('#all_users');
+    	        data.forEach(function(item, i, arr){
+    	            $all_users.prepend('<li><table><tr><td>' + escape(item.name, 1000) + '</td><td onclick="addUser('+chatPk+', '+item.pk+')"> + </td></tr></table></li>');
     	        });
     	    });
 
@@ -126,7 +164,7 @@
         <tr>
             <td>
                 <div>
-                    <ul>
+                    <ul id="chats">
                     {% for room in rooms %}
                         <li onclick="viewChatUsers({{ room.pk }})">{{ room.name }}</li>
                     {% endfor %}
@@ -136,6 +174,10 @@
             </td>
             <td>
                 <ul id="chat_users">
+
+                </ul>
+
+                <ul id="all_users">
 
                 </ul>
             </td>

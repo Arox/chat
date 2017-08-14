@@ -28,7 +28,7 @@ class RoomView(View):
             room_chat.save()
             room_chat.users.add(request.user)
             room_chat.save()
-            return HttpResponse(status=201)
+            return HttpResponse(json.dumps(dict(pk=room_chat.pk, name=room_chat.name)), status=201, content_type="application/json")
         return HttpResponse(status=400)
 
 
@@ -37,7 +37,17 @@ class RoomUsersView(View):
         if request.user.is_authenticated and isinstance(request.user, User):
             room = Room.objects.get(pk=kwargs['pk'])
             users = User.objects.filter(pk__in=[x.pk for x in room.users.all()])
-            result = ['{} {}'.format(x.first_name, x.last_name) for x in users]
+            result = [{'pk': x.pk, 'name': '{} {}'.format(x.first_name, x.last_name)} for x in users]
+            return HttpResponse(json.dumps(result), status=200, content_type="application/json")
+        return HttpResponse(status=400)
+
+
+class ForRoomUsersView(View):
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated and isinstance(request.user, User):
+            room = Room.objects.get(pk=kwargs['pk'])
+            users = User.objects.exclude(pk__in=[x.pk for x in room.users.all()])
+            result = [{'pk': x.pk, 'name': '{} {}'.format(x.first_name, x.last_name)} for x in users]
             return HttpResponse(json.dumps(result), status=200, content_type="application/json")
         return HttpResponse(status=400)
 
@@ -48,6 +58,28 @@ class RoomMessage(View):
             room = Room.objects.get(pk=kwargs['pk'])
             messages = ChatMessage.objects.filter(room=room).order_by('time')
             result = [{'time': str(x.time), 'user': '{} {}'.format(x.author.first_name, x.author.last_name), 'message': x.text} for x in messages]
-            print(result)
             return HttpResponse(json.dumps(result), status=200, content_type="application/json")
+        return HttpResponse(status=400)
+
+
+class RoomAddUserView(View):
+    def post(self, request, room_pk, user_pk, *args, **kwargs):
+        if request.user.is_authenticated and isinstance(request.user, User):
+            room_chat = Room.objects.get(pk=room_pk)
+            user = User.objects.get(pk=user_pk)
+            room_chat.users.add(user)
+            room_chat.save()
+            print(request.session)
+            return HttpResponse(status=200)
+        return HttpResponse(status=400)
+
+
+class RoomRemoveUserView(View):
+    def post(self, request, room_pk, user_pk, *args, **kwargs):
+        if request.user.is_authenticated and isinstance(request.user, User):
+            room_chat = Room.objects.get(pk=room_pk)
+            user = User.objects.get(pk=user_pk)
+            room_chat.users.remove(user)
+            room_chat.save()
+            return HttpResponse(status=200)
         return HttpResponse(status=400)

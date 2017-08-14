@@ -32,7 +32,7 @@ def connect_room(request):
     try:
         room = Room.objects.get(pk=pk, users__in=[request.user])
         request.reply_channel.send({"accept": True})
-        Group('room{0}'.format(pk)).add(request.reply_channel)
+        Group('room{0}-{1}'.format(pk, request.user.pk)).add(request.reply_channel)
     except Room.DoesNotExist:
         request.reply_channel.send({"accept": False})
 
@@ -41,7 +41,7 @@ def connect_room(request):
 def disconnect_room(request):
     url: str = request.content['path']
     pk = pk_from_url(url)
-    Group('room{0}'.format(pk)).discard(request.reply_channel)
+    Group('room{0}-{1}'.format(pk, request.user.pk)).discard(request.reply_channel)
 
 
 @channel_session_user
@@ -54,4 +54,5 @@ def send_room(request):
         message = ChatMessage(text=body['message'], room=room)
         message.author = request.user
         message.save()
-        Group('room{0}'.format(pk)).send({'text' : json.dumps(body)})
+        for user in room.users.all():
+            Group('room{0}-{1}'.format(pk, user.pk)).send({'text' : json.dumps(body)})
