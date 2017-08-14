@@ -77,6 +77,12 @@
     	        });
     	    });
 
+    	    $.get('messages/' + chatPk + '/', function(data){
+    	        data.forEach(function(item, i, arr){
+    	            $chat.prepend('<li>' + escape(item.message, 1000) + '</li>');
+    	        });
+    	    });
+
     	    var host = 'ws://{{ host }}/room/message/'+chatPk+'/';
 
             if (socket != null){
