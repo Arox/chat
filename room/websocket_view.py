@@ -1,6 +1,4 @@
 from django.http import HttpResponse
-from rest_framework import status
-
 from channels.handler import AsgiHandler
 from channels import Group
 import json
@@ -9,7 +7,7 @@ from my_auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
 from channels.sessions import channel_session
 from channels.auth import channel_session_user, channel_session_user_from_http
-from .models import Room
+from .models import Room, ChatMessage
 
 
 def pk_from_url(url: str):
@@ -39,15 +37,21 @@ def connect_room(request):
         request.reply_channel.send({"accept": False})
 
 
+@channel_session_user
 def disconnect_room(request):
     url: str = request.content['path']
     pk = pk_from_url(url)
     Group('room{0}'.format(pk)).discard(request.reply_channel)
 
 
+@channel_session_user
 def send_room(request):
-    body = json.loads(request.content['text'])
-    print(body)
-    url: str = request.content['path']
-    pk = pk_from_url(url)
-    Group('room{0}'.format(pk)).send({'text' : json.dumps(body)})
+    if isinstance(request.user, User):
+        body = json.loads(request.content['text'])
+        url: str = request.content['path']
+        pk = pk_from_url(url)
+        room = Room.objects.get(pk=pk)
+        message = ChatMessage(text=body['message'], room=room)
+        message.author = request.user
+        message.save()
+        Group('room{0}'.format(pk)).send({'text' : json.dumps(body)})
