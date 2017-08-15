@@ -7,32 +7,67 @@
 </head>
 <body>
 <style type="text/css">
-	/*html, body {
+	html, body {
 	    margin:0;
 	    padding:0;
 	    width:100%;
 	    font-family: monospace;
 	}
 
-	input {
+	#input_chat input {
 	    position: fixed;
 	    bottom: 0px;
-	    left: 0px;
-    	width: 100%;
+	    right: 0px;
+        width: 80%;
 	    padding-left: 10px;
 	    border: 0;
 	    border-bottom: solid 1px #555;
-	    height: 120px;
+        height: 120px;
 	    font-size: 14px;
 	    background: rgba(255,255,255,0.9);
 	    font-family: monospace;
 	    box-shadow: 2px 0px 5px #BBB;
 	}
 
+
+
 	#chat {
 	    margin-top: 30px;
 	    padding-left: 10px;
-	}*/
+	}
+
+	#chats{
+	    width: 200px;
+	    padding: 0px 0px 0px 40px;
+	}
+
+	#chats li {
+	    height: 40px;
+	}
+
+	#chat_users{
+	    width: 200px;
+	}
+
+	#chat_users li{
+	    height: 40px;
+	}
+
+	#all_users{
+	    width: 200px;
+	}
+
+	#all_users li{
+	    height: 40px;
+	}
+
+	ul{
+	    list-style: none;
+	}
+
+	li :hover{
+	    border: 2px solid #000000;
+	}
 
 	</style>
 
@@ -55,8 +90,9 @@
     	}
 
     	function renderMessage(data) {
-            $chat.prepend('<div class="human">' +
-                          '<span>' + escape(data, 1000) + '</span>' +
+            $chat.prepend('<div>' +
+                          '<span class="user_part_message">' + data.user + ':</span>' +
+                          '<span class="data_part_message">' + data.message + '</span>' +
                           '</div>');
         }
 
@@ -101,6 +137,8 @@
     	    clearContainer("all_users");
     	    clearContainer("chat");
 
+    	    $('#input_chat').show();
+
     	    $.get('users/' + chatPk + '/', function(data){
                 var $chat_users = $('#chat_users');
     	        data.forEach(function(item, i, arr){
@@ -117,7 +155,12 @@
 
     	    $.get('messages/' + chatPk + '/', function(data){
     	        data.forEach(function(item, i, arr){
-    	            $chat.prepend('<li>' + escape(item.message, 1000) + '</li>');
+    	            renderMessage(item);
+    	            /*$chat.prepend('<div>' +
+                          '<span class="user_part_message">' + escape(item.user, 1000) + ':</span>' +
+                          '<span class="data_part_message">' + escape(item.message, 1000) + '</span>' +
+                          '</div>');*/
+    	            /*$chat.prepend('<li>' + escape(item.message, 1000) + '</li>');*/
     	        });
     	    });
 
@@ -144,8 +187,8 @@
 
 
             socket.onmessage = function(event) {
-                // alert("Получены данные " + event.data);
-                renderMessage(JSON.parse(event.data)["message"]);
+                alert("Получены данные " + event.data);
+                renderMessage(JSON.parse(event.data));
             };
 
             socket.onerror = function(error) {
@@ -160,7 +203,7 @@
     	}
     </script>
 
-    <table>
+    <table width="20% 20% 60%">
         <tr>
             <td>
                 <div>
@@ -183,7 +226,7 @@
             </td>
             <td>
                 <div id="chat">Основное окно</div>
-                <div><input type="text" id="input_message" /></div>
+                <div id="input_chat"><input type="text" id="input_message"  class="chat_input_hidden"/></div>
             </td>
         </tr>
     </table>
@@ -193,6 +236,8 @@
         $( document ).ready(function() {
           $text = $('#input_message');
           $chat = $('#chat');
+
+          $('#input_chat').hide();
 
             $text.keyup(function (event) {
                 var message = $text.val().substr(0, 1000);

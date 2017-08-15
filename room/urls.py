@@ -1,8 +1,10 @@
 from django.conf.urls import url, include
 from . import views
+from django.contrib.auth.decorators import login_required
+
 
 urlpatterns = [
-    url(r'^$', views.WindowView.as_view(), name='main'),
+    url(r'^$', login_required(views.WindowView.as_view()), name='main'),
     url(r'^add/$', views.RoomView.as_view(), name='create_room'),
     url(r'^users/(?P<pk>[0-9\-]+)/$', views.RoomUsersView.as_view(), name='users_room'),
     url(r'^users/all/(?P<pk>[0-9\-]+)/$', views.ForRoomUsersView.as_view(), name='users_all'),

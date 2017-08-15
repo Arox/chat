@@ -130,7 +130,7 @@ STATIC_URL = '/static/'
 AUTH_USER_MODEL = 'my_auth.User'
 AUTH_USER_MODEL_SERIALIZER = 'auth:user'
 
-LOGIN_URL = 'auth:login'
+LOGIN_URL = 'auth:form'
 LOGOUT_URL = 'auth:logout'
 
 REST_FRAMEWORK = {

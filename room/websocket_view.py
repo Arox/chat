@@ -55,4 +55,6 @@ def send_room(request):
         message.author = request.user
         message.save()
         for user in room.users.all():
-            Group('room{0}-{1}'.format(pk, user.pk)).send({'text' : json.dumps(body)})
+            Group('room{0}-{1}'.format(pk, user.pk)).send(
+                {'text' : json.dumps(
+                    {'message': body['message'], 'user': '{} {}'.format(request.user.first_name, request.user.last_name)})})

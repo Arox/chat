@@ -15,7 +15,8 @@
     <div class='block' id = 'login_block'>
         <div>
 
-            <form action="{% url 'auth:form' %}" method="post" novalidate>
+            <form action="{% url 'auth:form' %}{% if next_url %}?next={{ next_url }}{% endif %}
+" method="post" novalidate>
                 {% csrf_token %}
                 {{ form }}
                 <div class="button-conteiner"><button type="submit" class="btn-enter">Войти</button></div>
