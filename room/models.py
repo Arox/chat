@@ -6,6 +6,7 @@ from my_auth.models import User
 class Room(models.Model):
     name = models.CharField(max_length=30, unique=True, null=False)
     users = models.ManyToManyField(to=User)
+    admin = models.ForeignKey(to=User, related_name='admin')
 
 
 class ChatMessage(models.Model):

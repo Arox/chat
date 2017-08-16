@@ -24,7 +24,7 @@ class WindowView(TemplateView):
 class RoomView(View):
     def post(self, request, *args, **kwargs):
         if request.user.is_authenticated and isinstance(request.user, User):
-            room_chat = Room(name=request.POST['name'])
+            room_chat = Room(name=request.POST['name'], admin=request.user)
             room_chat.save()
             room_chat.users.add(request.user)
             room_chat.save()
@@ -66,11 +66,14 @@ class RoomAddUserView(View):
     def post(self, request, room_pk, user_pk, *args, **kwargs):
         if request.user.is_authenticated and isinstance(request.user, User):
             room_chat = Room.objects.get(pk=room_pk)
-            user = User.objects.get(pk=user_pk)
-            room_chat.users.add(user)
-            room_chat.save()
-            print(request.session)
-            return HttpResponse(status=200)
+            if request.user == room_chat.admin:
+                user = User.objects.get(pk=user_pk)
+                room_chat.users.add(user)
+                room_chat.save()
+                message = ChatMessage(text='add user: {} {}'.format(user.first_name, user.last_name), room=room_chat)
+                message.author = request.user
+                message.save()
+                return HttpResponse(status=200)
         return HttpResponse(status=400)
 
 
@@ -78,8 +81,12 @@ class RoomRemoveUserView(View):
     def post(self, request, room_pk, user_pk, *args, **kwargs):
         if request.user.is_authenticated and isinstance(request.user, User):
             room_chat = Room.objects.get(pk=room_pk)
-            user = User.objects.get(pk=user_pk)
-            room_chat.users.remove(user)
-            room_chat.save()
-            return HttpResponse(status=200)
+            if request.user == room_chat.admin:
+                user = User.objects.get(pk=user_pk)
+                room_chat.users.remove(user)
+                room_chat.save()
+                message = ChatMessage(text='remove user: {} {}'.format(user.first_name, user.last_name), room=room_chat)
+                message.author = request.user
+                message.save()
+                return HttpResponse(status=200)
         return HttpResponse(status=400)
