@@ -24,11 +24,20 @@ class WindowView(TemplateView):
 class RoomView(View):
     def post(self, request, *args, **kwargs):
         if request.user.is_authenticated and isinstance(request.user, User):
-            room_chat = Room(name=request.POST['name'], admin=request.user)
+            room_chat = Room(name=request.POST['name'])
             room_chat.save()
             room_chat.users.add(request.user)
+            room_chat.admin.add(request.user)
             room_chat.save()
             return HttpResponse(json.dumps(dict(pk=room_chat.pk, name=room_chat.name)), status=201, content_type="application/json")
+        return HttpResponse(status=400)
+
+
+class RoomUserInfoView(View):
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated and isinstance(request.user, User):
+            room = Room.objects.get(pk=kwargs['room_pk'])
+            return HttpResponse(json.dumps({'is_admin': (request.user in room.admin.all())}), status=200, content_type="application/json")
         return HttpResponse(status=400)
 
 
@@ -37,7 +46,8 @@ class RoomUsersView(View):
         if request.user.is_authenticated and isinstance(request.user, User):
             room = Room.objects.get(pk=kwargs['pk'])
             users = User.objects.filter(pk__in=[x.pk for x in room.users.all()])
-            result = [{'pk': x.pk, 'name': '{} {}'.format(x.first_name, x.last_name)} for x in users]
+            admins = room.admin.all()
+            result = [{'pk': x.pk, 'name': '{} {}'.format(x.first_name, x.last_name), 'is_admin': x in admins} for x in users]
             return HttpResponse(json.dumps(result), status=200, content_type="application/json")
         return HttpResponse(status=400)
 
@@ -66,7 +76,7 @@ class RoomAddUserView(View):
     def post(self, request, room_pk, user_pk, *args, **kwargs):
         if request.user.is_authenticated and isinstance(request.user, User):
             room_chat = Room.objects.get(pk=room_pk)
-            if request.user == room_chat.admin:
+            if request.user in room_chat.admin.all():
                 user = User.objects.get(pk=user_pk)
                 room_chat.users.add(user)
                 room_chat.save()
@@ -77,11 +87,43 @@ class RoomAddUserView(View):
         return HttpResponse(status=400)
 
 
+class RoomAddAdminView(View):
+    def post(self, request, room_pk, user_pk, *args, **kwargs):
+        if request.user.is_authenticated and isinstance(request.user, User):
+            room_chat = Room.objects.get(pk=room_pk)
+            if request.user in room_chat.admin.all():
+                user = User.objects.get(pk=user_pk)
+                if user in room_chat.users.all():
+                    room_chat.admin.add(user)
+                    room_chat.save()
+                    message = ChatMessage(text='set user admin: {} {}'.format(user.first_name, user.last_name), room=room_chat)
+                    message.author = request.user
+                    message.save()
+                    return HttpResponse(status=200)
+        return HttpResponse(status=400)
+
+
+class RoomRemoveAdminView(View):
+    def post(self, request, room_pk, user_pk, *args, **kwargs):
+        if request.user.is_authenticated and isinstance(request.user, User):
+            room_chat = Room.objects.get(pk=room_pk)
+            if request.user in room_chat.admin.all():
+                user = User.objects.get(pk=user_pk)
+                if user in room_chat.users.all():
+                    room_chat.admin.remove(user)
+                    room_chat.save()
+                    message = ChatMessage(text='unset user admin: {} {}'.format(user.first_name, user.last_name), room=room_chat)
+                    message.author = request.user
+                    message.save()
+                    return HttpResponse(status=200)
+        return HttpResponse(status=400)
+
+
 class RoomRemoveUserView(View):
     def post(self, request, room_pk, user_pk, *args, **kwargs):
         if request.user.is_authenticated and isinstance(request.user, User):
             room_chat = Room.objects.get(pk=room_pk)
-            if request.user == room_chat.admin:
+            if request.user in room_chat.admin.all() or request.user.pk == user_pk:
                 user = User.objects.get(pk=user_pk)
                 room_chat.users.remove(user)
                 room_chat.save()

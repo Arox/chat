@@ -120,6 +120,30 @@
     	    });
         }
 
+        function setAdminUser(chatPk, userPk)
+        {
+            $.post('users/chat/'+ chatPk + '/add/admin/'+userPk+'/', function(data, status){
+                if (status == 'success'){
+                    viewChatUsers(chatPk);
+    	        }
+    	        else{
+    	            alert('Ошибка');
+    	        }
+    	    });
+        }
+
+        function removeAdminUser(chatPk, userPk)
+        {
+            $.post('users/chat/'+ chatPk + '/remove/admin/'+userPk+'/', function(data, status){
+                if (status == 'success'){
+                    viewChatUsers(chatPk);
+    	        }
+    	        else{
+    	            alert('Ошибка');
+    	        }
+    	    });
+        }
+
         function removeUser(chatPk, userPk)
         {
             $.post('users/chat/'+ chatPk + '/remove/'+userPk+'/', function(data, status){
@@ -138,11 +162,26 @@
     	    clearContainer("chat");
 
     	    $('#input_chat').show();
+            var self_admin = false;
+            $.get('self/chat/' + chatPk + '/', function(data){
+                self_admin = data.is_admin
+            });
 
     	    $.get('users/' + chatPk + '/', function(data){
                 var $chat_users = $('#chat_users');
     	        data.forEach(function(item, i, arr){
-    	            $chat_users.prepend('<li><table><tr><td>' + escape(item.name, 1000) + '</td><td onclick="removeUser('+chatPk+', '+item.pk+')"> - </td></tr></table></li>');
+    	            var admin_mark = '<td></td>';
+    	            if (self_admin){
+                        if (!item.is_admin ){
+                            admin_mark = '<td onclick="setAdminUser('+chatPk+', '+item.pk+')"> * </td>';
+                        }
+                        else{
+                            admin_mark = '<td onclick="removeAdminUser('+chatPk+', '+item.pk+')"> A </td>';
+                        }
+                    }
+    	            $chat_users.prepend('<li><table><tr><td>' + escape(item.name, 1000) + '</td><td onclick="removeUser('+chatPk+', '+item.pk+')"> - </td>'
+    	            + admin_mark +
+    	            '</tr></table></li>');
     	        });
     	    });
 
