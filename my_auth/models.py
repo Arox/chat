@@ -12,3 +12,7 @@ class User(AbstractUser):
         if len(self.password) < 1 or len(self.username) < 1:
             raise User.InvalidUserData()
         return super().save(*args, **kwargs)
+
+    @property
+    def str_name(self):
+        return '{} {}'.format(self.first_name, self.last_name)
